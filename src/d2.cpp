@@ -2,30 +2,16 @@
 #include <fstream>
 #include <vector>
 #include <unordered_map>
+#include "../lib/util.h"
 
 using namespace std;
 
 class Solution {
 private:
-    unordered_map<char, vector<string>> hm = {
-        {'o', {"one"}},
-        {'t', {"two", "three"}},
-        {'f', {"four", "five"}},
-        {'s', {"six", "seven"}},
-        {'e', {"eight"}},
-        {'n', {"nine"}}
-    };
-
-    unordered_map<string, int> lookup = {
-        {"one", 1},
-        {"two", 2},
-        {"three", 3},
-        {"four", 4},
-        {"five", 5},
-        {"six", 6},
-        {"seven", 7},
-        {"eight", 8},
-        {"nine", 9}
+    unordered_map<string, int> limits = {
+        {"red", 12},
+        {"green", 13},
+        {"blue", 14}
     };
 
 public:
@@ -37,23 +23,44 @@ public:
         }
 
         string line;
-        int sm = 0;
+        int sum = 0;
         while (getline(file, line)) {
-            //cout << "Read line: " << line << endl;
-            vector<int> numbers = {};
-            
-            for (char c: line) {
-                if (isdigit(c) ) {
-                    // cout << c;
-                    numbers.push_back(c - '0');
+            vector<string> tokens = splitString(line, ':');
+            string gameN = splitString(tokens[0], ' ')[1];
+            int gameNInt = stoi(gameN);
+            sum += gameNInt;
+            vector<string> games = splitString(tokens[1], ';');
+
+            // cout << gameN << endl;
+
+            bool skip;
+            for (auto g: games) {
+                skip = false;
+                vector<string> colors = splitString(g, ',');
+                for (auto c: colors) {
+                    string ctrim = trim(c);
+                    vector<string> cTokens = splitString(ctrim, ' ');
+                    int cnum = stoi(cTokens[0]);
+                    string cname = cTokens[1];
+
+                    cout << "cname is " << cname << " and cnum is " << cnum << endl;
+
+                    if (limits[cname] < cnum) {
+                        cout << "skip" << endl;
+                        sum -= gameNInt;
+                        skip = true;
+                        break;
+                    }
+                }
+                if (skip) {
+                    break;
                 }
             }
+            // cout << "sum is now " << sum << endl;
 
-            int newnum = numbers[0] * 10 + numbers[numbers.size()-1];
-            sm += newnum;
         }
 
-        return sm;
+        return sum;
     }
 
     int run2(string s) {
@@ -64,37 +71,45 @@ public:
         }
 
         string line;
-        int sm = 0;
+        int sum = 0;
         while (getline(file, line)) {
-            //cout << "Read line: " << line << endl;
-            vector<int> numbers = {};
-            
-            for (int i = 0; i < line.size(); i++) {
-                char c = line[i];
-                if (isdigit(c) ) {
-                    // cout << c;
-                    numbers.push_back(c - '0');
-                }
+            vector<string> tokens = splitString(line, ':');
+            string gameN = splitString(tokens[0], ' ')[1];
+            int gameNInt = stoi(gameN);
+            vector<string> games = splitString(tokens[1], ';');
 
-                if (hm.find(c) != hm.end()) {
-                    auto v = hm[c];
-                    for (auto ss: v) {
-                        auto findss = line.find(ss, i);
-                        if (findss == i) {
-                            numbers.push_back(lookup[ss]);
-                            break;
-                        }
+            // Before each game, reset the limits 
+            limits["red"] = 0;
+            limits["green"] = 0;
+            limits["blue"] = 0;
+
+            // cout << gameN << endl;
+
+            bool skip;
+            for (auto g: games) {
+                skip = false;
+                vector<string> colors = splitString(g, ',');
+                for (auto c: colors) {
+                    string ctrim = trim(c);
+                    vector<string> cTokens = splitString(ctrim, ' ');
+                    int cnum = stoi(cTokens[0]);
+                    string cname = cTokens[1];
+
+                    cout << "cname is " << cname << " and cnum is " << cnum << endl;
+
+                    if (limits[cname] < cnum) {
+                        limits[cname] = cnum;
                     }
                 }
             }
-
-            int newnum = numbers[0] * 10 + numbers[numbers.size()-1];
-            sm += newnum;
+            // After each game, get the power
+            sum += (limits["red"] * limits["blue"] * limits["green"]);
+            // cout << "sum is now " << sum << endl;
         }
 
-        return sm;
-
+        return sum;
     }
+
 };
 
 int main() {
@@ -108,6 +123,6 @@ int main() {
     // split by space -> number
 
     Solution *S = new Solution();
-    // cout << S->run(s) << endl;
-    // cout << S->run2(s) << endl;
+    cout << S->run(s) << endl;
+    cout << S->run2(s) << endl;
 }
