@@ -15,5 +15,7 @@ struct pair_hash {
     }
 };
 
+void printVecVecChar(vector<vector<char>> v);
+
 
 #endif // SPLIT_STRING_H

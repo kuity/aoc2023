@@ -1,5 +1,6 @@
 #include "util.h"
 #include <sstream>
+#include <iostream>
 
 using namespace std;
 
@@ -33,4 +34,13 @@ string trim(const string& str) {
              [isSpace](unsigned char c) { return !isSpace(c); }).base(), s.end());
 
     return s;
+}
+
+void printVecVecChar(vector<vector<char>> v) {
+    for (auto x: v) {
+        for (auto c: x) {
+            cout << c;
+        }
+        cout << endl;
+    }
 }
