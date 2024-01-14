@@ -3,10 +3,12 @@
 
 #include <string>
 #include <vector>
+#include <iostream>
 
 using namespace std;
 
 vector<string> splitString(const string& str, char delimiter);
+vector<string> splitStringStr(const string& str, const string& delimiter);
 string trim(const string& str);
 // Define a custom hash function for pairs of integers
 struct pair_hash {
@@ -16,6 +18,14 @@ struct pair_hash {
 };
 
 void printVecVecChar(vector<vector<char>> v);
+
+template <typename T>
+void printVec(const vector<T>& vec) {
+    for (const auto& item: vec) {
+        cout << item << ' ';
+    }
+    cout << endl;
+}
 
 
 #endif // SPLIT_STRING_H
