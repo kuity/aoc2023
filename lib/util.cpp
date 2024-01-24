@@ -1,6 +1,7 @@
 #include "util.h"
 #include <sstream>
 #include <iostream>
+#include <numeric>
 
 using namespace std;
 
@@ -57,4 +58,8 @@ void printVecVecChar(vector<vector<char>> v) {
         }
         cout << endl;
     }
+}
+
+long lcm(long a, long b) {
+    return a / gcd(a, b) * b;
 }

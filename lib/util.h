@@ -27,5 +27,6 @@ void printVec(const vector<T>& vec) {
     cout << endl;
 }
 
+long lcm(long a, long b);
 
 #endif // SPLIT_STRING_H
