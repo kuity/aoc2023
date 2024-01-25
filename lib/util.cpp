@@ -63,3 +63,14 @@ void printVecVecChar(vector<vector<char>> v) {
 long lcm(long a, long b) {
     return a / gcd(a, b) * b;
 }
+
+string vectorToString(const vector<int>& v) {
+    ostringstream oss;
+    for (size_t i = 0; i < v.size(); ++i) {
+        if (i > 0) {
+            oss << ",";
+        }
+        oss << v[i];
+    }
+    return oss.str();
+}

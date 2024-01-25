@@ -1,163 +1,159 @@
 #include <iostream>
 #include <fstream>
+#include <tuple>
 #include <vector>
-#include <queue>
-#include <stack>
-#include <set>
 #include <unordered_map>
 #include "../lib/util.h"
 
 using namespace std;
-
-struct RouteInfo {
-    unordered_map<string, int> hm;
-    int cycleLen;
-    int cycleStart;
-    
-    // constructor
-    RouteInfo(unordered_map<string, int> a, int b, int c) : hm(a), cycleLen(b), cycleStart(c) {}
-};
+using ArgsTuple = tuple<string, vector<int>>;
 
 class Solution {
 private:
+    vector<vector<int>> allNums;
+    vector<string> allStrings;
+    int numRecs;
+    unordered_map<ArgsTuple, long, TupleHasher> cache;
+
 public:
-    int checkStacks(vector<int> &nums, vector<string> &strings, int nI, int sI) {
-        cout << "nums " << nums.size() << " strings " << strings.size() << " nI " << nI << " sI " << sI << endl;
-        // No more requirements, remaining strings cannot have #
-        if (nI >= nums.size()) {
-            for (auto i=sI; i<strings.size(); i++) {
-                auto st = strings[i];
-                for (auto c: st) {
-                    if (c == '#') {
-                        return 0;
-                    }
-                }
-            }
-            cout << "Return 1, all pass" << endl;
-            return 1;
-        }
-
-        // No more strings but still have requirements
-        if (sI >= strings.size() && nI < nums.size()) {
-            cout << "Return 0, outstanding requirements" << endl;
-            return 0;
-        }
-
-        auto nxtNum = nums[nI];
-        auto nxtString = strings[sI];
-
-        // iterate through characters of string
-        cout << "string at index " << sI << " is " << nxtString << endl;
-        int numHash = 0;
-        int acc = 0;
-        for (auto i=0; i<nxtString.size(); i++) {
-            auto c = nxtString[i];
-            if (c == '#') {
-                numHash++;
-            }
-
-            // ? can be either # or .
-            if (c == '?' && numHash == 0) {
-                // check ? = .
-                auto newString = nxtString.substr(i+1);
-                if (newString.size() > 0) {
-                    strings[sI] = newString;
-                    acc += checkStacks(nums, strings, nI, sI);
-                    strings[sI] = nxtString;
-                } else {
-                    acc += checkStacks(nums, strings, nI, sI+1);
-                }
-
-                // check ? = #
-                numHash++;
-            } 
-
-            // ? must be #
-            else if (c == '?' && numHash < nxtNum) {
-                numHash++;
-            }
-
-            // ? must be .
-            else if (c == '?' && numHash == nxtNum) {
-                auto newString = nxtString.substr(i+1);
-                if (newString.size() > 0) {
-                    strings[sI] = newString;
-                    acc += checkStacks(nums, strings, nI+1, sI);
-                    strings[sI] = nxtString;
-                }  else {
-                    acc += checkStacks(nums, strings, nI+1, sI+1);
-                }
-                return acc;
-            }
-
-            // requirement was exceeded so no need to check further (this config is not possible)
-            if (numHash > nxtNum) {
-                return acc;
-            }
-        }
-
-        // finished iterating, check the number of hash accumulated
-        if (numHash == nxtNum) {
-            cout << "Checked done string and correct num hash" << endl;
-            acc += checkStacks(nums, strings, nI+1, sI+1);
-        } 
-        // not enough hash accumulated
-        else {
-            cout << "Checked done string and incorrect num hash" << endl;
-        }
-
-        return acc;
-    }
-
-    // S(X_5) = '#' -> S(X_4) + '.' -> S(X_4)
-    // We just need a method to validate S(X_0) 
-    // S(X_1) = '#' -> S(X_0) + '.' -> S(X_0)
-    int run(string s) {
+    void parse(string s) {
         ifstream file(s);
         if (!file.is_open()) {
             cerr << "Error opening file" << endl;
-            return 1;
+            return;
         }
-
         string line;
-        vector<int> nums;
-        vector<string> strings;
 
-        int ans = 0;
-        int times = 0;
-
-        // for (auto i=0; i<954; i++) {
-        //     getline(file, line);
-        // } && times < 1
         while (getline(file, line)) {
             auto v = splitString(line, ' ');
             cout << "Strings is " << v[0] << ", reqs are " << v[1] << endl;
             auto v2 = splitString(v[1], ',');
+            
+            vector<int> nums = {};
             for (auto a: v2) {
                 nums.push_back(stoi(a));
             }
+            allNums.push_back(nums);
+            allStrings.push_back(v[0]);
+        }
+        numRecs = allStrings.size();
+    }
 
-            auto v1 = splitString(v[0], '.');
-            for (auto a: v1) {
-                strings.push_back(a);
+    void inflateInput() {
+        for (auto i=0; i<numRecs; i++) {
+            allStrings[i] = allStrings[i] + "?" + allStrings[i] + "?" + allStrings[i] + "?" + allStrings[i] + "?" + allStrings[i];
+            vector<int> numCopy = allNums[i];
+            numCopy.insert(numCopy.end(), allNums[i].begin(), allNums[i].end());
+            numCopy.insert(numCopy.end(), allNums[i].begin(), allNums[i].end());
+            numCopy.insert(numCopy.end(), allNums[i].begin(), allNums[i].end());
+            numCopy.insert(numCopy.end(), allNums[i].begin(), allNums[i].end());
+            allNums[i] = numCopy;
+        }
+    }
+
+    long checkStacks(vector<int> nums, string str) {
+        // cout << "string: " << str << ", nums: ";
+        // printVec(nums);
+        // memoization here
+        ArgsTuple args = make_tuple(str, nums);
+        auto it = cache.find(args);
+        if (it != cache.end()) {
+            return it->second;
+        }
+        
+        long returnVal;
+
+        // No more nums, remaining strings cannot have #
+        if (nums.empty()) {
+            for (auto c: str) {
+                if (c == '#') {
+                    return 0;
+                }
             }
-
-            auto ways = checkStacks(nums, strings, 0, 0);
-            cout << "Ways = " << ways << endl;
-            ans += ways;
-            nums = {};
-            strings = {};
-            times++;
+            returnVal = 1;
         }
 
+        // no string but still have nums
+        else if (str.size() == 0 && !nums.empty()) {
+            // cout << "Return 0, outstanding requirements" << endl;
+            returnVal = 0;
+        }
+
+        // not enough string length left
+        else if (str.length() < nums[0]) {
+            returnVal = 0;
+        }
+
+        else if (str[0] == '.') {
+            returnVal = checkStacks(nums, str.substr(1));
+        }
+
+        else if (str[0] == '#') {
+            int counter = nums[0];
+            int index = 0;
+            while (counter > 0) {
+                if (str[index] == '.') {
+                    cache[args] = 0;
+                    return 0;
+                }
+                index++;
+                counter--;
+            }
+
+            vector remNums(nums.begin()+1, nums.end());
+
+            // check for the separator ##.##
+            if (remNums.size() > 0) {
+                if (index >= str.length() || str[index] == '#') {
+                    cache[args] = 0;
+                    return 0;
+                }
+                index++;
+            }
+            returnVal = checkStacks(remNums, str.substr(index));
+        }
+
+        // Don't know how, can try both
+        else if (str[0] == '?') {
+            returnVal = checkStacks(nums, "." + str.substr(1)) + checkStacks(nums, "#" + str.substr(1));
+        }
+
+        cache[args] = returnVal;
+        return returnVal;
+    }
+
+    long run() {
+        long ans = 0;
+        for (auto i=0; i<numRecs; i++) {
+            long recordAns = checkStacks(allNums[i], allStrings[i]);
+            cout << "Record " << i << ": " << recordAns << endl;
+            ans += recordAns;
+        }
+        
+        return ans;
+    }
+
+    long run2() {
+        inflateInput();
+        long ans = 0;
+        for (auto i=0; i<numRecs; i++) {
+            long recordAns = checkStacks(allNums[i], allStrings[i]);
+            cout << "Record " << i << ": " << recordAns << endl;
+            ans += recordAns;
+        }
+        
         return ans;
     }
 };
 
 int main() {
     string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d12.input";
+    // string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d12a.input";
 
     Solution *S = new Solution();
-    int ans = S->run(s);
-    cout << "The answer is " << ans << endl;
+    S->parse(s);
+    long ans = S->run();
+    cout << "Part 1 answer is " << ans << endl;
+    long ans2 = S->run2();
+    cout << "Part 2 answer is " << ans2 << endl;
 }
