@@ -1,4 +1,5 @@
 #include <vector>
+#include <iostream>
 
 using namespace std;
 
@@ -10,32 +11,24 @@ unsigned long long hashFunction(const vector<long>& numbers, int start, int end,
     return hash;
 }
 
-bool findRecurringPattern(const vector<long>& numbers, int& cycleLength, int& offset) {
+// no offset
+bool findRecurringPattern(const vector<long>& numbers, int& cycleLength) {
     int n = numbers.size();
     unsigned long long mod = 1e9 + 7;
 
-    for (int len = 1; len <= n / 2; ++len) { // Try different pattern lengths
-        unordered_map<unsigned long long, int> hashTable; // Hash value -> start index
+    for (int len = 4; len <= n / 2; ++len) { // Try different pattern lengths
+        // cout << "try len " << len << endl;
         bool found = false;
-        
-        for (int i = 0; i <= n - len; ++i) {
-            if (i + 2 * len > n) break; // Ensure enough room for at least one repetition
 
-            auto currentHash = hashFunction(numbers, i, i + len, 256, mod);
-
-            if (hashTable.find(currentHash) != hashTable.end()) {
-                // Potential match found, verify it
-                int prevIndex = hashTable[currentHash];
-                // syntax: equal(range1_start, range1_end, range2_start)
-                if (equal(numbers.begin() + prevIndex, numbers.begin() + prevIndex + len, numbers.begin() + i)) {
-                    // Verified recurring pattern
-                    cycleLength = len;
-                    offset = prevIndex;
-                    return true;
-                }
-            } else {
-                // Store the current hash and index
-                hashTable[currentHash] = i;
+        auto p1 = len;
+        auto p2 = 2*len;
+        if (p2 > n) break;
+        auto hash1 = hashFunction(numbers, 0, p1, 256, mod);
+        auto hash2 = hashFunction(numbers, p1, p2, 256, mod);
+        if (hash1 == hash2) {
+            if (equal(numbers.begin() + len, numbers.begin() + p1, numbers.begin() + p1)) {
+                cycleLength = len;
+                return true;
             }
         }
     }

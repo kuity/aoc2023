@@ -1,8 +1,11 @@
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 #include <vector>
 #include <queue>
+#include <set>
 #include "../lib/util.h"
+#include "../lib/patternFinder.h"
 
 using namespace std;
 
@@ -54,9 +57,66 @@ private:
     unordered_map<string, Mechanism *> M;
     long numLow;
     long numHigh;
+    // For part 2 tracking
+    unordered_map<string, vector<long>> patterns;
+    set<string> hasHighPulse;
 
 public:
-    void processQueue() {
+    void parse(string s) {
+        ifstream file(s);
+        if (!file.is_open()) {
+            cerr << "Error opening file" << endl;
+        }
+
+        string line;
+        while (getline(file, line)) {
+            auto tokens = splitStringStr(line, " -> ");
+            auto mechanismStr = tokens[0];
+            auto targetStr = tokens[1];
+            auto targets = splitString(targetStr, ',');
+            // cout << "mechanism is " << mechanismStr << ", targets are " << targetStr << endl;
+
+            MechanismType pt;
+            string label;
+            if (mechanismStr == "broadcaster") {
+                pt = Broadcast;
+                label = mechanismStr;
+            } else if (mechanismStr[0] == '%') {
+                pt = Flipflop;
+                label = mechanismStr.substr(1);
+            } else {
+                pt = Conjunction;
+                label = mechanismStr.substr(1);
+            }
+
+            Mechanism * mech = new Mechanism(label, pt);
+            for (auto t: targets) {
+                mech->targets.push_back(trim(t));
+            }
+            // cout << "Targets : ";
+            // printVec(mech->targets);
+            M[label] = mech;
+        }
+
+        // Make a second pass over M to update conjunction's input vals;
+        for (auto x: M) {
+            auto comp = x.second;
+            for (auto t: comp->targets) {
+                // Just make sure all labels are present in M
+                if (M.find(t) == M.end()) {
+                    Mechanism *nm = new Mechanism(t, Dummy);
+                    M[t] = nm;
+                }
+
+                auto tgt = M[t];
+                if (tgt->mtype == Conjunction) {
+                    tgt->lastPulseType[comp] = Low;
+                }
+            }
+        }
+    }
+
+    void processQueue(bool part2) {
         auto pa = Q.front();
         Q.pop();
         // cout << "Handle: " << pa << endl;
@@ -66,12 +126,13 @@ public:
             numHigh++;
         }
 
-        // Check the pattern of dn 
-        if (pa.origin->label == "dn") {
-            for (auto inp: pa.origin->lastPulseType) {
-                cout << inp.first->label << ": " << inp.second << " ," ;
+        // For part 2: Check the pattern of dn 
+        if (part2) {
+            auto fr = pa.origin->label;
+            if ((fr == "fh" || fr == "dd" || fr == "xp" || fr == "fc") && pa.pt == High) {
+                hasHighPulse.insert(fr);
+                // cout << inp.first->label << ": " << inp.second << " ," ;
             }
-            cout << endl;
         }
 
         // Execute pulse depending on mechanism
@@ -122,100 +183,73 @@ public:
     // We can use a enum for the mechanism type; there is broadcast, flipflop, and conjunction
     // We need a function to process a pulse
     long run(string s) {
-        ifstream file(s);
-        if (!file.is_open()) {
-            cerr << "Error opening file" << endl;
-            return 1;
-        }
-
-        string line;
+        parse(s);
         long answer = 0;
-
-        while (getline(file, line)) {
-            auto tokens = splitStringStr(line, " -> ");
-            auto mechanismStr = tokens[0];
-            auto targetStr = tokens[1];
-            auto targets = splitString(targetStr, ',');
-            // cout << "mechanism is " << mechanismStr << ", targets are " << targetStr << endl;
-
-            MechanismType pt;
-            string label;
-            if (mechanismStr == "broadcaster") {
-                pt = Broadcast;
-                label = mechanismStr;
-            } else if (mechanismStr[0] == '%') {
-                pt = Flipflop;
-                label = mechanismStr.substr(1);
-            } else {
-                pt = Conjunction;
-                label = mechanismStr.substr(1);
-            }
-
-            Mechanism * mech = new Mechanism(label, pt);
-            for (auto t: targets) {
-                mech->targets.push_back(trim(t));
-            }
-            // cout << "Targets : ";
-            // printVec(mech->targets);
-            M[label] = mech;
-        }
-
-        // Make a second pass over M to update conjunction's input vals;
-        for (auto x: M) {
-            auto comp = x.second;
-            for (auto t: comp->targets) {
-                // Just make sure all labels are present in M
-                if (M.find(t) == M.end()) {
-                    Mechanism *nm = new Mechanism(t, Dummy);
-                    M[t] = nm;
-                }
-
-                auto tgt = M[t];
-                if (tgt->mtype == Conjunction) {
-                    tgt->lastPulseType[comp] = Low;
-                }
-            }
-        }
 
         // Push first action into Q and start processing
         Mechanism *origin = new Mechanism("origin", Dummy);
         numLow = 0;
         numHigh = 0;
 
-        int numPass = 100000;
+        int numPass = 1000;
         while (numPass > 0) {
             Q.push(PulseAction(origin, M["broadcaster"], Low));
             while(!Q.empty()) {
-                // cout << "Q size is " << Q.size() << endl;
-                processQueue();
+                processQueue(false);
             }
-
-            // cout << "numLow is " << numLow << ", numHigh is " << numHigh << endl;
             numPass--;
-            // cout << "numPass is " << numPass << endl;
         }
 
         return numLow * numHigh;
     }
 
     // Part 2 idea
-    // Can identify the exact chain of states required
-    // i.e. s1, s2, ..., sn 
-    // Then need to find the cycle length and offset of each component
-    // Then need to find the minimum number that will meet s1 -> sn
-    // ...
-    // ...
     // We're just gonna "game the system" and find the answer through observation
     long run2(string s) {
-        // We will represent each component attribute as [offset, cycleLow, cycleHigh]
-        // cycleLow + cycleHigh is a full cycle
-        // The answer is when all components' cycleLow coincides
-        vector<vector<int>> components;
-        // vector<int> fc = {25737, 4, 25768}; 25777; 25772; 25768; 25773; 25773; 25769; 25770
-        vector<int> dd = {25737, 0, 0};
-        vector<int> fh = {25737, 0, 0};
-        vector<int> xp = {25737, 0, 0};
-        
+        parse(s);
+        patterns = {};
+        Mechanism *origin = new Mechanism("origin", Dummy);
+
+        // int numPass = 1;
+        int numPass = 1;
+        int totalPass = 30000;
+        while (numPass < totalPass) {
+            Q.push(PulseAction(origin, M["broadcaster"], Low));
+            hasHighPulse = {};
+            while(!Q.empty()) {
+                processQueue(true);
+            }
+
+            for (auto label: hasHighPulse) {
+                patterns[label].push_back(numPass);
+            }
+
+            numPass++;
+        }
+
+        vector<vector<long>> frequencies;
+        // Observe the pattern here
+        for (auto kv: patterns) {
+            cout << "Checking pattern for " << kv.first << endl;
+            auto v = kv.second;
+            long val = 0;
+            vector<long> frequency = {};
+            for (auto nVal: v) {
+                frequency.push_back(nVal - val);
+                val = nVal;
+            }
+            cout << "Frequency is ";
+            printVec(frequency);
+            frequencies.push_back(frequency);
+        }
+
+        long ans = frequencies[0][0];
+        for (auto i=1; i<frequencies.size(); i++) {
+            ans = lcm(ans, frequencies[i][0]);
+        }
+
+        cout << "The LCM is " << ans << endl;
+        return ans;
     }
 };
 
@@ -225,5 +259,7 @@ int main() {
     string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d20.input";
     Solution *S = new Solution();
     long ans = S->run(s);
-    cout << "The answer is " << ans << endl;
+    cout << "Part 1 answer is " << ans << endl;
+    long ans2 = S->run2(s);
+    cout << "Part 2 answer is " << ans2 << endl;
 }

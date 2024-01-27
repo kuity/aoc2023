@@ -74,3 +74,12 @@ string vectorToString(const vector<int>& v) {
     }
     return oss.str();
 }
+
+unsigned long bitStringToLong(const string& bitString) {
+    return bitset<64>(bitString).to_ulong();
+}
+
+string longToBitString(unsigned long num) {
+    bitset<64> bits(num);
+    return bits.to_string();
+}

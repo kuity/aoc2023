@@ -7,6 +7,7 @@
 #include <sstream>
 #include <functional>
 #include <tuple>
+#include <bitset>
 
 using namespace std;
 
@@ -61,5 +62,9 @@ struct TupleHasher {
         return h;
     }
 };
+
+unsigned long bitStringToLong(const string& bitString);
+
+string longToBitString(unsigned long num);
 
 #endif // SPLIT_STRING_H

@@ -4,6 +4,6 @@
 #include <vector>
 using namespace std;
 
-bool findRecurringPattern(const vector<long>& numbers, int& cycleLength, int& offset);
+bool findRecurringPattern(const vector<long>& numbers, int& cycleLength);
 
 #endif
