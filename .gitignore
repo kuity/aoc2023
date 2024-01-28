@@ -1,2 +1,4 @@
 prog.out
 target/
+.clangd
+sample/
