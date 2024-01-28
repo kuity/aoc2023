@@ -1,27 +1,25 @@
 #include <iostream>
 #include <fstream>
+#include <unordered_map>
 #include <vector>
 #include <set>
 
 using namespace std;
 
 struct Tile {
-    set<Tile *> tileNext;
+    unordered_map<Tile *, int> tileNext;
     int numTileNext;
     int row;
     int col;
     char c;
-    int tileDist;
-    bool isPruned;
 
-    Tile(int r, int c, char ch) : row(r), col(c), c(ch), tileNext({}), numTileNext(0), tileDist(1), isPruned(false) {}
-    Tile(): row(0), col(0), c('.'), tileNext({}), numTileNext(0), tileDist(1), isPruned(false) {}
+    Tile(int r, int c, char ch) : row(r), col(c), c(ch), tileNext({}), numTileNext(0)  {}
+    Tile(): row(0), col(0), c('.'), tileNext({}), numTileNext(0)  {}
 };
 
 ostream& operator<<(ostream& os, const Tile& b) {
     os << "row: " << b.row+1 << ", col: " << b.col+1 << ", char: " << b.c;
     os << ", numTileNext: " << b.numTileNext;
-    os << ", tileDist: " << b.tileDist;
     return os;
 }
 
@@ -45,37 +43,37 @@ public:
                 switch (T->c) {
                     case '#': break;
                     case '>': {
+                        T->tileNext[board[x][y+1]] = 1;
                         T->numTileNext = 1;
-                        T->tileNext.insert(board[x][y+1]);
                         break;
                     }
                     case '<' : {
+                        T->tileNext[board[x][y-1]] = 1;
                         T->numTileNext = 1;
-                        T->tileNext.insert(board[x][y-1]);
                         break;
                     }
                     case '^' : {
+                        T->tileNext[board[x-1][y]] = 1;
                         T->numTileNext = 1;
-                        T->tileNext.insert(board[x-1][y]);
                         break;
                     }
                     case 'v' : {
+                        T->tileNext[board[x+1][y]] = 1;
                         T->numTileNext = 1;
-                        T->tileNext.insert(board[x+1][y]);
                         break;
                     }
                     case '.' : {
                         if (x>0 && board[x-1][y]->c != '#' && board[x-1][y]->c != 'v') {
-                            T->tileNext.insert(board[x-1][y]);
+                            T->tileNext[board[x-1][y]] = 1;
                         }
                         if (x<boardRows-1 && board[x+1][y]->c != '#' && board[x+1][y]->c != '^') {
-                            T->tileNext.insert(board[x+1][y]);
+                            T->tileNext[board[x+1][y]] = 1;
                         }
                         if (y>0 && board[x][y-1]->c != '#' && board[x][y-1]->c != '>') {
-                            T->tileNext.insert(board[x][y-1]);
+                            T->tileNext[board[x][y-1]] = 1;
                         }
                         if (y<boardCols-1 && board[x][y+1]->c != '#' && board[x][y+1]->c != '<') {
-                            T->tileNext.insert(board[x][y+1]);
+                            T->tileNext[board[x][y+1]] = 1;
                         }
                         T->numTileNext = T->tileNext.size();
                         break;
@@ -101,16 +99,16 @@ public:
                     case 'v':
                     case '.': {
                         if (x>0 && board[x-1][y]->c != '#') {
-                            T->tileNext.insert(board[x-1][y]);
+                            T->tileNext[board[x-1][y]] = 1;
                         }
                         if (x<boardRows-1 && board[x+1][y]->c != '#') {
-                            T->tileNext.insert(board[x+1][y]);
+                            T->tileNext[board[x+1][y]] = 1;
                         }
                         if (y>0 && board[x][y-1]->c != '#') {
-                            T->tileNext.insert(board[x][y-1]);
+                            T->tileNext[board[x][y-1]] = 1;
                         }
                         if (y<boardCols-1 && board[x][y+1]->c != '#') {
-                            T->tileNext.insert(board[x][y+1]);
+                            T->tileNext[board[x][y+1]] = 1;
                         }
                         T->numTileNext = T->tileNext.size();
                         break;
@@ -121,43 +119,36 @@ public:
     }
 
     // Let's make it more efficient
-    void pruneTiles(Tile *T, set<Tile *> neighbors) {
-        // cout << "Pruning tile " << *T << endl;
-        if (neighbors.size() == 0) {
-            // cout << "case 1" << endl;
+    void pruneTiles(int i, int j) {
+        auto T = board[i][j];
+        cout << "Pruning " << *T << endl;
+        if (T->numTileNext <= 2) {
             return;
         }
-        else if (neighbors.size() > 1) {
-            // cout << "case 2" << endl;
-            // prune each neighbor if it's not already pruned
-            for (auto n: neighbors) {
-                if (!n->isPruned) {
-                    auto nNeighbors = n->tileNext;
-                    nNeighbors.erase(T);
-                    pruneTiles(n, nNeighbors);
+
+        unordered_map<Tile *, int> newTileNext;
+        for (auto neighbor: T->tileNext) {
+            auto steps = 1;
+            auto parent = T;
+            auto newNeighbor = neighbor.first;
+            while (newNeighbor->numTileNext == 2) {
+                cout << "newNeighbor is "<< *newNeighbor << endl;
+                for (auto nneighbor: newNeighbor->tileNext) {
+                    if (nneighbor.first == parent) {
+                        continue;
+                    } else {
+                        parent = newNeighbor;
+                        newNeighbor = nneighbor.first;
+                        steps++;
+                        break;
+                    }
                 }
             }
+            newTileNext[newNeighbor] = steps;
         }
-        else {
-            // cout << "case 3" << endl;
-            auto prev = T;
-            while (neighbors.size() == 1) {
-                auto N = *(neighbors.begin());
-                auto newSet = N->tileNext;
-                newSet.erase(prev);
-                neighbors = newSet;
-                T->numTileNext = newSet.size();
-                T->tileNext = newSet;
-                T->tileDist++;
-                prev = N;
-            }
-            cout << "After pruning " << *T << endl;
-            T->isPruned = true;
-            pruneTiles(prev, neighbors);
-        }
+        T->tileNext = newTileNext;
     }
 
-    // Pruning: maintain the path length as separate variable
     long findLongestPath(Tile *T, set<Tile *> P, long PLength) {
         // Reached the end
         if (T == end) {
@@ -174,12 +165,15 @@ public:
 
         auto nextTiles = T->tileNext;
         long maxLongestSubPath = 0;
-        for (auto nextTile: nextTiles) {
+        for (auto kv: nextTiles) {
+            auto nextTile = kv.first;
+            auto steps = kv.second;
             if (P.find(nextTile) != P.end()) {
                 continue;
             }
+            // cout << "Visiting next: " << *nextTile << endl;
             P.insert(nextTile);
-            auto nextPathLength = findLongestPath(nextTile, P, PLength+nextTile->tileDist);
+            auto nextPathLength = findLongestPath(nextTile, P, PLength+steps);
             P.erase(nextTile);
             if (nextPathLength > maxLongestSubPath) {
                 maxLongestSubPath = nextPathLength;
@@ -232,8 +226,7 @@ public:
         cout << "board rows: " << boardRows << ", board cols: " << boardCols << endl;
         setBoard();
 
-        // don't count starting tile so minus 1
-        return findLongestPath(start, {start}, start->tileDist) - 1;
+        return findLongestPath(start, {start}, 0);
     }
 
     // Part 2 Idea
@@ -270,19 +263,19 @@ public:
         cout << "board rows: " << boardRows << ", board cols: " << boardCols << endl;
         setBoard2();
 
-        auto startNeighbors = start->tileNext;
-        startNeighbors.erase(start);
-        pruneTiles(start, startNeighbors);
-        // return 0;
+        for (auto i=0; i<boardRows; i++) {
+            for (auto j=0; j<boardCols; j++) {
+                pruneTiles(i, j);
+            }
+        }
 
-        // don't count starting tile so minus 1
-        return findLongestPath(start, {start}, start->tileDist) - 1;
+        return findLongestPath(start, {start}, 0);
     }
 };
 
 int main() {
-    // string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d23.input";
-    string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d23a.input";
+    string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d23.input";
+    // string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d23a.input";
     Solution *S = new Solution();
     // long ans = S->run(s);
     // cout << "The answer for part 1 is " << ans << endl;

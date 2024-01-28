@@ -1,30 +1,11 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <set>
 #include "../lib/util.h"
+#include <Eigen/Dense>
 
 using namespace std;
-
-struct Tile {
-    set<Tile *> tileNext;
-    int numTileNext;
-    int row;
-    int col;
-    char c;
-    int tileDist;
-    bool isPruned;
-
-    Tile(int r, int c, char ch) : row(r), col(c), c(ch), tileNext({}), numTileNext(0), tileDist(1), isPruned(false) {}
-    Tile(): row(0), col(0), c('.'), tileNext({}), numTileNext(0), tileDist(1), isPruned(false) {}
-};
-
-ostream& operator<<(ostream& os, const Tile& b) {
-    os << "row: " << b.row+1 << ", col: " << b.col+1 << ", char: " << b.c;
-    os << ", numTileNext: " << b.numTileNext;
-    os << ", tileDist: " << b.tileDist;
-    return os;
-}
+using Eigen::MatrixXd;
 
 class Solution {
 private:
@@ -157,81 +138,115 @@ public:
         return ans;
     }
 
-    // Part 2 idea
-    // 
-    // From reddit megathread, an insight is that the Rock can be considered as stationary
-    // We invert perspective where the hailstones are perceived as moving towards the rock
-    // Thus the rock has a velocity of 0, and the hailstones each have an adjusted velocity
-    // We can set z aside and brute force for x and y testing values of velocity in a range
-    // 
-    // After that, we can derive t and solve for z, confirming that values are in fact the same
+    // This is a linear algebra solution taken from Reddit Megathread
+    // Basically we can equate the rock(Po, Vo) to any hailstone i (Pi, Vi)
+    // Po + tVo = Pi + tVi
+    // => Po - Pi = t(Vi - Vo)  => Po - Pi = -t(Vo - Vi)
+    // These 2 vectors are parallel and so
+    // (Po - Pi) x (Vo - Vi) = 0
+    // We can sub in 2 i values to equate both sides, which will give 3 equations
+    // We can do this again to get 6 equations, to solve 6 unknowns
+    //
+    // I wrote the cross product by hand but we write it way more concisely using eigen library functions (lol)
     long run2(string s) {
         parse(s);
-        convertLineEqn();
+        MatrixXd A(6, 6);
+        MatrixXd b(6, 1);
+       
+        double Vx1 = allVel[0][0];
+        double Vy1 = allVel[0][1];
+        double Vz1 = allVel[0][2];
+        double Px1 = allPos[0][0];
+        double Py1 = allPos[0][1];
+        double Pz1 = allPos[0][2];
 
-        long vxLowerBound = -500;
-        long vxUpperBound = 500;
-        long vyLowerBound = -500;
-        long vyUpperBound = 500;
-        bool found = false;
-        pair<double, double> rockSpeed;
-        vector<pair<long, long>> checker;
+        double Vx2 = allVel[1][0];
+        double Vy2 = allVel[1][1];
+        double Vz2 = allVel[1][2];
+        double Px2 = allPos[1][0];
+        double Py2 = allPos[1][1];
+        double Pz2 = allPos[1][2];
 
-        for (auto vx = vxLowerBound; vx < vxUpperBound; vx++) {
-            for (auto vy = vyLowerBound; vy < vyUpperBound; vy++) {
-                vector<vector<long>> save = allVel;
-                // Subtract v from all line velocities
-                for (auto i=0; i<numRecs; i++) {
-                    allVel[i] = {allVel[i][0]-vx, allVel[i][1]-vy, allVel[i][2]};
-                }
-                convertLineEqn();
-                cout << "Checking (" << vx << ", " << vy << ")" << endl;
+        double Vx3 = allVel[2][0];
+        double Vy3 = allVel[2][1];
+        double Vz3 = allVel[2][2];
+        double Px3 = allPos[2][0];
+        double Py3 = allPos[2][1];
+        double Pz3 = allPos[2][2];
 
-                checker = {};
-                bool keepChecking = true;
-                // Now check each intersect if it's the same
-                for (auto i=0; i<numRecs-1; i++) {
-                    for (auto j=i+1; j<numRecs; j++) {
-                        auto res = getIntersect(lines[i], lines[j]);
-                        if (!res.first) {
-                            keepChecking = false;
-                            break;
-                        }
-                        long xpos = static_cast<long>(res.second.first);
-                        long ypos = static_cast<long>(res.second.second);
-                        pair<long, long> checkPos = {xpos, ypos};
+        double C1 = Py1 * Vz1 - Pz1 * Vy1;
+        double C2 = Py2 * Vz2 - Pz2 * Vy2;
+        double C3 = Pz1 * Vx1 - Px1 * Vz1;
+        double C4 = Pz2 * Vx2 - Px2 * Vz2;
+        double C5 = Px1 * Vy1 - Py1 * Vx1;
+        double C6 = Px2 * Vy2 - Py2 * Vx2;
 
-                        if (checker.empty()) {
-                            checker.push_back(checkPos);
-                            cout << checkPos << endl;
-                        } else {
-                            if (checker[0].first != xpos || checker[0].second != ypos) {
-                                // cout << checker[0] << endl;
-                                // cout << res.second << endl;
-                                keepChecking = false;
-                                break;
-                            }
-                        }
-                    }
-                    if (!keepChecking) break;
-                }
+        double C7  = Py1 * Vz1 - Pz1 * Vy1;
+        double C8  = Py3 * Vz3 - Pz3 * Vy3;
+        double C9  = Pz1 * Vx1 - Px1 * Vz1;
+        double C10 = Pz3 * Vx3 - Px3 * Vz3;
+        double C11 = Px1 * Vy1 - Py1 * Vx1;
+        double C12 = Px3 * Vy3 - Py3 * Vx3;
 
-                if (keepChecking) {
-                    found = true;
-                    rockSpeed = {vx, vy};
-                    break;
-                }
-                allVel = save;
-            }
-            if (found) break;
-        }
+        A(0,0) = 0;
+        A(0,1) = Vz2-Vz1;
+        A(0,2) = Vy1-Vy2;
+        A(0,3) = 0;
+        A(0,4) = Pz1-Pz2;
+        A(0,5) = Py2-Py1;
 
-        if (found) {
-            cout << "Found a common intersect: (" << checker[0].first << "," << checker[0].second << ")" << endl;
-            cout << "Velocity is (" << rockSpeed.first << ", " << rockSpeed.second << ")" << endl;
-        }
+        A(1,0) = Vz1-Vz2;
+        A(1,1) = 0;
+        A(1,2) = Vx2-Vx1;
+        A(1,3) = Pz2-Pz1;
+        A(1,4) = 0;
+        A(1,5) = Px1-Px2;
 
-        return 0;
+        A(2,0) = Vy2-Vy1;
+        A(2,1) = Vx1-Vx2;
+        A(2,2) = 0;
+        A(2,3) = Py1-Py2;
+        A(2,4) = Px2-Px1;
+        A(2,5) = 0;
+
+        A(3,0) = 0;
+        A(3,1) = Vz3-Vz1;
+        A(3,2) = Vy1-Vy3;
+        A(3,3) = 0;
+        A(3,4) = Pz1-Pz3;
+        A(3,5) = Py3-Py1;
+
+        A(4,0) = Vz1-Vz3;
+        A(4,1) = 0;
+        A(4,2) = Vx3-Vx1;
+        A(4,3) = Pz3-Pz1;
+        A(4,4) = 0;
+        A(4,5) = Px1-Px3;
+
+        A(5,0) = Vy3-Vy1;
+        A(5,1) = Vx1-Vx3;
+        A(5,2) = 0;
+        A(5,3) = Py1-Py3;
+        A(5,4) = Px3-Px1;
+        A(5,5) = 0;
+
+        b(0,0) = C2-C1;
+        b(1,0) = C4-C3;
+        b(2,0) = C6-C5;
+        b(3,0) = C8-C7;
+        b(4,0) = C10-C9;
+        b(5,0) = C12-C11;
+
+        cout << "Following is the matrix A: " << endl;
+        cout << A << endl;
+
+        cout << "Following is the matrix b: " << endl;
+        cout << b << endl;
+
+        auto x = A.inverse() * b;
+        cout << "The solution is: " << endl;
+        cout << x << endl;
+        return x(0,0) + x(1,0) + x(2,0);
     }
 };
 
@@ -239,9 +254,9 @@ int main() {
     string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d24.input";
     // string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d24a.input";
     Solution *S = new Solution();
-    // long ans = S->run(s);
-    // cout << "The answer for part 1 is " << ans << endl;
+    long ans = S->run(s);
+    cout << "The answer for part 1 is " << ans << endl;
 
-    // long ans2 = S->run2(s);
-    // cout << "The answer for part 2 is " << ans2 << endl;
+    long ans2 = S->run2(s);
+    cout << "The answer for part 2 is " << ans2 << endl;
 }
