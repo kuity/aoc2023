@@ -11,7 +11,10 @@ Then if first char match, try to find corresponding numeric string in the input
 
 # Day 2
 ## Part 1
+This is just checking if the "games" in each input passes the imposed constraints
+
 ## Part 2
+This is just keeping a "running max" for each color over the input
 
 # Day 3
 ## Part 1

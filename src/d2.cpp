@@ -43,10 +43,10 @@ public:
                     int cnum = stoi(cTokens[0]);
                     string cname = cTokens[1];
 
-                    cout << "cname is " << cname << " and cnum is " << cnum << endl;
+                    // cout << "cname is " << cname << " and cnum is " << cnum << endl;
 
                     if (limits[cname] < cnum) {
-                        cout << "skip" << endl;
+                        // cout << "skip" << endl;
                         sum -= gameNInt;
                         skip = true;
                         break;
@@ -95,7 +95,7 @@ public:
                     int cnum = stoi(cTokens[0]);
                     string cname = cTokens[1];
 
-                    cout << "cname is " << cname << " and cnum is " << cnum << endl;
+                    // cout << "cname is " << cname << " and cnum is " << cnum << endl;
 
                     if (limits[cname] < cnum) {
                         limits[cname] = cnum;
@@ -123,6 +123,9 @@ int main() {
     // split by space -> number
 
     Solution *S = new Solution();
-    cout << S->run(s) << endl;
-    cout << S->run2(s) << endl;
+    long ans = S->run(s);
+    cout << "The answer for part 1 is " << ans << endl;
+
+    long ans2 = S->run2(s);
+    cout << "The answer for part 2 is " << ans2 << endl;
 }
