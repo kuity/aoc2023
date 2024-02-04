@@ -4,7 +4,9 @@ Simply get all the numbers from each string and add them
 
 ## Part 2
 A number could be represented by either a single numeric char or a string
+
 For latter case, get the first char of each numeric string, eg. nine->'n'
+
 Then if first char match, try to find corresponding numeric string in the input
 
 # Day 2
