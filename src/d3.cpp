@@ -20,12 +20,6 @@ struct Part {
 
 class Solution {
 private:
-    unordered_map<string, int> limits = {
-        {"red", 12},
-        {"green", 13},
-        {"blue", 14}
-    };
-
 public:
     int run(string s) {
         ifstream file(s);
@@ -115,8 +109,8 @@ public:
             }
         }
 
-        cout << "size of parts is " << partVec.size() << endl;
-        cout << "size of hashset is " << symbols.size() << endl;
+        //cout << "size of parts is " << partVec.size() << endl;
+        //cout << "size of hashset is " << symbols.size() << endl;
         return sum;
     }
 
@@ -222,9 +216,9 @@ public:
             }
         }
 
-        cout << "size of parts is " << partVec.size() << endl;
-        cout << "size of gears is " << gears.size() << endl;
-        cout << "size of attached gears is " << gear_count.size() << endl;
+        // cout << "size of parts is " << partVec.size() << endl;
+        // cout << "size of gears is " << gears.size() << endl;
+        // cout << "size of attached gears is " << gear_count.size() << endl;
         return sum;
     }
 };
@@ -240,5 +234,4 @@ int main() {
     cout << "Answer is " << ans << endl;
     auto ans2 = S->run2(s);
     cout << "Answer 2 is " << ans2 << endl;
-
 }

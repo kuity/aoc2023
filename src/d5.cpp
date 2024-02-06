@@ -1,9 +1,7 @@
 #include <iostream>
 #include <fstream>
 #include <vector>
-#include <tuple>
 #include <unordered_map>
-#include <unordered_set>
 #include "../lib/util.h"
 
 using namespace std;
@@ -70,7 +68,7 @@ public:
         long minval = 10000000000;
         for (auto seed: seeds) {
             long v = stol(seed);
-            cout << "checking seed " << v << endl;
+            // cout << "checking seed " << v << endl;
             for (auto m: maps) {
                 for (auto rg: m) {
                     if (v >= rg->rgStart && v < rg->rgEnd) {
@@ -82,12 +80,12 @@ public:
             if (v < minval) {
                 minval = v;
             }
-            cout << "mapped final value is " << v << endl;
+            // cout << "mapped final value is " << v << endl;
         }
 
-        cout << "minval is  " << minval << endl;
-        cout << "maps length is " << maps.size() << endl;
-        return 0;
+        // cout << "minval is  " << minval << endl;
+        // cout << "maps length is " << maps.size() << endl;
+        return minval;
     }
 
     int run2(string s) {
@@ -132,7 +130,7 @@ public:
         }
 
         for (int a=0; a<maps.size(); a++) {
-            cout << "Checking map number " << a <<  endl;
+            // cout << "Checking map number " << a <<  endl;
             // Impt: map needs to be sorted
             auto m = maps[a];
             sort(m.begin(), m.end(), compareMapPart);
@@ -174,7 +172,7 @@ public:
             }
             // sort(mappedSeeds.begin(), mappedSeeds.end(), compareRange);
             seeds = mappedSeeds;
-            cout << "seeds length is  " << seeds.size() << endl;
+            // cout << "seeds length is  " << seeds.size() << endl;
         }
 
         // find the lowest location
@@ -196,10 +194,10 @@ int main() {
     // range is a vector of (start, end, offset)
     // have a vector of ranges (vec of vec)
     Solution *S = new Solution();
-    // int ans = S->run(s);
-    // cout << ans << endl;
+    int ans = S->run(s);
+    cout << "Part 1 answer is " << ans << endl;
 
     int ans2 = S->run2(s);
-    cout << ans2 << endl;
+    cout << "Part 2 answer is " << ans2 << endl;
 
 }
