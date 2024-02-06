@@ -26,7 +26,7 @@ public:
 
         while (getline(file, line)) {
             auto v = splitString(line, ' ');
-            cout << "Strings is " << v[0] << ", reqs are " << v[1] << endl;
+            // cout << "Strings is " << v[0] << ", reqs are " << v[1] << endl;
             auto v2 = splitString(v[1], ',');
             
             vector<int> nums = {};
@@ -126,7 +126,7 @@ public:
         long ans = 0;
         for (auto i=0; i<numRecs; i++) {
             long recordAns = checkStacks(allNums[i], allStrings[i]);
-            cout << "Record " << i << ": " << recordAns << endl;
+            // cout << "Record " << i << ": " << recordAns << endl;
             ans += recordAns;
         }
         
@@ -138,7 +138,7 @@ public:
         long ans = 0;
         for (auto i=0; i<numRecs; i++) {
             long recordAns = checkStacks(allNums[i], allStrings[i]);
-            cout << "Record " << i << ": " << recordAns << endl;
+            // cout << "Record " << i << ": " << recordAns << endl;
             ans += recordAns;
         }
         

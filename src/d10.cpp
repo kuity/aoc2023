@@ -255,9 +255,9 @@ int main() {
 
     Solution *S = new Solution();
     S->parse(s);
-    // int ans = S->run(s);
-    // cout << ans << endl;
+    int ans = S->run(s);
+    cout << "Part 1 ans is " << ans << endl;
 
     int ans2 = S->run2(s);
-    cout << ans2 << endl;
+    cout << "Part 2 ans is " << ans2 << endl;
 }
