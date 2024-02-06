@@ -2,7 +2,6 @@
 #include <fstream>
 #include <vector>
 #include <unordered_map>
-#include "../lib/util.h"
 
 using namespace std;
 
@@ -80,7 +79,7 @@ public:
             if (line.size() == 0) {
                 int nRows = puzzle.size();
                 int nCols = puzzle[0].size();
-                cout << "Puzzle size is " << nRows << "x" << nCols << endl;
+                // cout << "Puzzle size is " << nRows << "x" << nCols << endl;
                 // TODO: Run the check
                 // We will check every row and every column
                 unordered_map<int, int> rowmap;
@@ -100,19 +99,19 @@ public:
                 }
 
                 // We will check the key value of rowmap and colmap and get the true "mirrors"
-                cout << "Iterating rowmap" << endl;
+                // cout << "Iterating rowmap" << endl;
                 for (auto kv: rowmap) {
                     if (kv.second == nRows) {
-                        cout << "Found Key is " << kv.first << ", Value is " << kv.second << endl;
+                        // cout << "Found Key is " << kv.first << ", Value is " << kv.second << endl;
                         ans += kv.first;
                         break;
                     }
                 }
 
-                cout << "Iterating colmap" << endl;
+                // cout << "Iterating colmap" << endl;
                 for (auto kv: colmap) {
                     if (kv.second == nCols) {
-                        cout << "Found Key is " << kv.first << ", Value is " << kv.second << endl;
+                        // cout << "Found Key is " << kv.first << ", Value is " << kv.second << endl;
                         ans += 100 * kv.first;
                         break;
                     }
@@ -152,7 +151,7 @@ public:
             if (line.size() == 0) {
                 int nRows = puzzle.size();
                 int nCols = puzzle[0].size();
-                cout << "Puzzle size is " << nRows << "x" << nCols << endl;
+                // cout << "Puzzle size is " << nRows << "x" << nCols << endl;
                 // TODO: Run the check
                 // We will check every row and every column
                 unordered_map<int, int> rowmap;
@@ -174,7 +173,7 @@ public:
                 // We will check the key value of rowmap and colmap and get the true "mirrors"
                 for (auto kv: rowmap) {
                     if (kv.second == nRows-1) {
-                        cout << "Found vert line is " << kv.first << ", Value is " << kv.second << endl;
+                        // cout << "Found vert line is " << kv.first << ", Value is " << kv.second << endl;
                         ans += kv.first;
                         break;
                     }
@@ -182,7 +181,7 @@ public:
 
                 for (auto kv: colmap) {
                     if (kv.second == nCols-1) {
-                        cout << "Found hor line is " << kv.first << ", Value is " << kv.second << endl;
+                        // cout << "Found hor line is " << kv.first << ", Value is " << kv.second << endl;
                         ans += 100 * kv.first;
                         break;
                     }
@@ -208,6 +207,9 @@ int main() {
     string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d13.input";
 
     Solution *S = new Solution();
-    int ans = S->run2(s);
-    cout << "The answer is " << ans << endl;
+    int ans = S->run(s);
+    cout << "Part 1 answer is " << ans << endl;
+
+    int ans2 = S->run2(s);
+    cout << "Part 2 answer is " << ans2 << endl;
 }

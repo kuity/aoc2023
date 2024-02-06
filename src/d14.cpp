@@ -152,7 +152,7 @@ public:
         int ans = 0;
 
         while (getline(file, line)) {
-            cout << line << endl;
+            // cout << line << endl;
             vector<char> v;
             for (char c: line) {
                 v.push_back(c);
@@ -163,7 +163,7 @@ public:
         int numRows = puzzle.size();
         int numCols = puzzle[0].size();
 
-        cout << "numRows = " << numRows << ", numCols = " << numCols << endl;
+        // cout << "numRows = " << numRows << ", numCols = " << numCols << endl;
         for (auto i=0; i<numCols; i++) {
             int numRocks = 0;
             int lastHex = 0;
@@ -196,7 +196,7 @@ public:
         int ans = 0;
 
         while (getline(file, line)) {
-            cout << line << endl;
+            // cout << line << endl;
             vector<char> v;
             for (char c: line) {
                 v.push_back(c);
@@ -211,13 +211,13 @@ public:
             rotate(puzzle, "down");
             rotate(puzzle, "right");
             int w = calculateWeight(puzzle);
-            cout << "try " << i << ": after 4 rotations, weight is " << w << endl;
+            // cout << "try " << i << ": after 4 rotations, weight is " << w << endl;
             if (lastSum == w) {
-                cout << "the weight was same as previous rotation" << endl;
+                // cout << "the weight was same as previous rotation" << endl;
             }
             lastSum = w;
         }
-        printVecVecChar(puzzle);
+        // printVecVecChar(puzzle);
 
         // This is not actly the real answer (but too lazy to code the rest)
         // By observing the weight, we see the cycle length is 9
@@ -232,6 +232,8 @@ int main() {
     string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d14.input";
 
     Solution *S = new Solution();
-    int ans = S->run2(s);
-    cout << "The answer is " << ans << endl;
+    int ans = S->run(s);
+    cout << "Part 1 answer is " << ans << endl;
+    int ans2 = S->run2(s);
+    cout << "Part 2 answer is " << ans2 << endl;
 }

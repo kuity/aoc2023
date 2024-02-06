@@ -187,7 +187,7 @@ public:
             }
         }
         
-        cout << "Config row=" << l.row << " col=" << l.col << " d=" << l.d << " num=" << ans << endl;
+        // cout << "Config row=" << l.row << " col=" << l.col << " d=" << l.d << " num=" << ans << endl;
         return ans;
     }
 
@@ -328,6 +328,9 @@ int main() {
     string s = "/Users/lingzhang.jiang/projects/personal/aoc2023/input/d16.input";
 
     Solution *S = new Solution();
-    int ans = S->run2(s);
-    cout << "The answer is " << ans << endl;
+    int ans = S->run(s);
+    cout << "Part 1 answer is " << ans << endl;
+
+    int ans2 = S->run2(s);
+    cout << "Part 2 answer is " << ans2 << endl;
 }

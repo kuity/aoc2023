@@ -167,7 +167,7 @@ public:
     // Each node with these characteristics is thus unique AND the set of these nodes covers all possibilities
     // Because 2 nodes with same coordinates, direction, and steps will have exactly the same choice of next square to visit, they are for all intents and purposes the same
     void goNext(Move &move) {
-        cout << "goNext was called on row " << move.pos.first << " and column " << move.pos.second << " with direction " << move.dir << endl;
+        // cout << "goNext was called on row " << move.pos.first << " and column " << move.pos.second << " with direction " << move.dir << endl;
         auto row = move.pos.first;
         auto col = move.pos.second;
 
@@ -178,7 +178,7 @@ public:
         if (row == numRows-1 && col == numCols-1) {
             if (D[move].first < answer) {
                 answer = D[move].first;
-                cout << "Found a better answer: " << answer << endl;
+                // cout << "Found a better answer: " << answer << endl;
             }
             return;
         }
@@ -198,7 +198,7 @@ public:
             if (D.find(nextMove) == D.end() || D[nextMove].first > nextVal) {
                 D[nextMove] = {nextVal, false};
                 pq.push(m);
-                cout << "size of pq is " << pq.size() << endl;
+                // cout << "size of pq is " << pq.size() << endl;
             }
         }
     }
